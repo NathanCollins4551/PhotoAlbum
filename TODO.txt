@@ -1,0 +1,34 @@
+Things to do:
+
+//
+Add functinoallity to onClickListerner in MainActivity>>updateAlbums
+//
+
+
+//
+Create new activity java file and xml for displaying the contents of an album
+this will be loaded using an intent from the onclick listener in MainActivity>>updateAlbums
+will display photos using recyclerView similar to how albums are displayed
+onclick listener will be needed to recognized clicks on photos to manage actions(delete photot,post photo,etc.)
+will need a add photo option
+//
+
+
+//
+get permission to access photos
+//
+
+
+//
+when adding photo, set the ImgPath so it can be referenced later, and update User Data
+//
+
+
+//
+Create fragment to be a poopup that gets the new album name
+//
+
+
+//
+create fragment to manage actions when a photo is clicked on
+//
