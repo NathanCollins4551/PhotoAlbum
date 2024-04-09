@@ -16,6 +16,7 @@ public class MainActivity extends AppCompatActivity {
 
     private RecyclerView recyclerView;
     private ArrayList<AlbumGridRecyclerData> recyclerDataArrayList;
+    final String CREATE_NEW = "Create New";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -51,11 +52,11 @@ public class MainActivity extends AppCompatActivity {
             Toast.makeText(this, userData.getCredentials().getInstagrampassword(), Toast.LENGTH_LONG).show();
         }
 
-        updateAlbumsView(userData);
+        updateAlbums(userData);
 
     }
 
-    public void updateAlbumsView(UserData userData){
+    public void updateAlbums(UserData userData){
         // created new array list..
         recyclerDataArrayList=new ArrayList<>();
 
@@ -66,7 +67,7 @@ public class MainActivity extends AppCompatActivity {
 
         //add new album option
 
-        recyclerDataArrayList.add(new AlbumGridRecyclerData("Create New", R.drawable.parrot, new Album()));
+        recyclerDataArrayList.add(new AlbumGridRecyclerData(CREATE_NEW, R.drawable.parrot, new Album()));
 
         // added data from arraylist to adapter class.
         AlbumGridRecycleViewAdapter adapter = new AlbumGridRecycleViewAdapter(recyclerDataArrayList,this);
@@ -81,6 +82,14 @@ public class MainActivity extends AppCompatActivity {
 
         adapter.setOnClickListener((AlbumGridRecycleViewAdapter.OnClickListener) (position, al) -> {
             Toast.makeText(this,""+position, Toast.LENGTH_LONG).show();
+            if(al.getName().equals(CREATE_NEW)){
+                //TODO: Show popup fragment to ask for a name in a edittext, then load new empty album
+
+            }
+            else{
+                //TODO: load new activity using intent to show the contents of the album
+
+            }
         });
 
     }
