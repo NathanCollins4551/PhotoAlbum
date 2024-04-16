@@ -1,15 +1,32 @@
 package com.example.photoalbum;
 
+import static android.Manifest.permission.READ_MEDIA_IMAGES;
+
+import androidx.annotation.RequiresApi;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import android.content.Context;
+import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.database.Cursor;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
+import android.provider.MediaStore;
 import android.util.Log;
+import android.view.View;
+import android.widget.EditText;
 import android.widget.Toast;
 
 import java.util.ArrayList;
+import java.util.Objects;
 
 
 public class MainActivity extends AppCompatActivity {
@@ -17,6 +34,9 @@ public class MainActivity extends AppCompatActivity {
     private RecyclerView recyclerView;
     private ArrayList<AlbumGridRecyclerData> recyclerDataArrayList;
     final String CREATE_NEW = "Create New";
+    private static final int PERMISSION_REQUEST_CODE = 200;
+    private ArrayList<String> imagePaths;
+    FileManager fileManager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -26,33 +46,19 @@ public class MainActivity extends AppCompatActivity {
 
         recyclerView=findViewById(R.id.idCourseRV);
 
-        FileManager fileManager = new FileManager(getApplicationContext(), "userdata.json");
+        fileManager = new FileManager(getApplicationContext(), "userdata.json");
 
-
-
-/*
-        UserData test = new UserData();
-        test.getCredentials().setInstagramusername("instaUser");
-        test.getAlbums().add(new Album());
-        test.getAlbums().get(0).setName("empty");
-
-        fileManager.writeData(test);
- */
+        if(!checkPermission()){
+            requestPermission();
+        }
 
         UserData userData = fileManager.readData();
 
-        for(int i = 0; i < userData.Albums.size(); i++){
-            Log.i("hi",userData.getAlbums().get(i).getName());
-        }
-
-        if(userData.getCredentials().getInstagrampassword() == null){
-            Toast.makeText(this, "obj is null", Toast.LENGTH_LONG).show();
-        }
-        else{
-            Toast.makeText(this, userData.getCredentials().getInstagrampassword(), Toast.LENGTH_LONG).show();
-        }
 
         updateAlbums(userData);
+
+
+
 
     }
 
@@ -60,14 +66,19 @@ public class MainActivity extends AppCompatActivity {
         // created new array list..
         recyclerDataArrayList=new ArrayList<>();
 
+        Bitmap parrot = BitmapFactory.decodeResource(getApplicationContext().getResources(),
+                R.drawable.parrot);
+
         // added data to array list
         for(int i = 0; i < userData.getAlbums().size(); i++){
-            recyclerDataArrayList.add(new AlbumGridRecyclerData(userData.getAlbums().get(i).getName(),R.drawable.parrot, userData.getAlbums().get(i)));
+            recyclerDataArrayList.add(new AlbumGridRecyclerData(userData.getAlbums().get(i).getName(),parrot, userData.getAlbums().get(i)));
         }
 
         //add new album option
 
-        recyclerDataArrayList.add(new AlbumGridRecyclerData(CREATE_NEW, R.drawable.parrot, new Album()));
+        Album tmp = new Album();
+        tmp.setName(CREATE_NEW);
+        recyclerDataArrayList.add(new AlbumGridRecyclerData(tmp.getName(), parrot, tmp));
 
         // added data from arraylist to adapter class.
         AlbumGridRecycleViewAdapter adapter = new AlbumGridRecycleViewAdapter(recyclerDataArrayList,this);
@@ -81,16 +92,90 @@ public class MainActivity extends AppCompatActivity {
         recyclerView.setAdapter(adapter);
 
         adapter.setOnClickListener((AlbumGridRecycleViewAdapter.OnClickListener) (position, al) -> {
-            Toast.makeText(this,""+position, Toast.LENGTH_LONG).show();
-            if(al.getName().equals(CREATE_NEW)){
-                //TODO: Show popup fragment to ask for a name in a edittext, then load new empty album
-
+            if(Objects.equals(al.getName(), CREATE_NEW)){
+                getAlbumNameAlertDialog();
             }
             else{
-                //TODO: load new activity using intent to show the contents of the album
-
+                loadAlbum(al);
             }
         });
 
+    }
+    void loadAlbum(Album album){
+
+        Intent intent = new Intent(this, ViewAlbum.class);
+
+        intent.putExtra("album",album);
+
+        startActivity(intent);
+    }
+    void createAlbum(String name){
+        Album newAlbum = new Album();
+        newAlbum.setName(name);
+
+        UserData userData = fileManager.readData();
+        userData.getAlbums().add(newAlbum);
+        //below should not be needed
+        //userData.setAlbums(userData.getAlbums());
+        fileManager.writeData(userData);
+
+        loadAlbum(newAlbum);
+    }
+
+    public void getAlbumNameAlertDialog() {
+        // Create an alert builder
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Name");
+
+        // set the custom layout
+        final View customLayout = getLayoutInflater().inflate(R.layout.get_new_album_name, null);
+        builder.setView(customLayout);
+
+        // add a button
+        builder.setPositiveButton("OK", (dialog, which) -> {
+            // send data from the AlertDialog to the Activity
+            EditText editText = customLayout.findViewById(R.id.editText);
+            createAlbum(editText.getText().toString());
+        });
+        // create and show the alert dialog
+        AlertDialog dialog = builder.create();
+        dialog.show();
+    }
+
+
+
+
+    private boolean checkPermission() {
+        // in this method we are checking if the permissions are granted or not and returning the result.
+
+        // int result = ContextCompat.checkSelfPermission(getApplicationContext(), READ_EXTERNAL_STORAGE);
+        int result = ContextCompat.checkSelfPermission(getApplicationContext(), READ_MEDIA_IMAGES);
+        return result == PackageManager.PERMISSION_GRANTED;
+    }
+
+
+    private void requestPermission() {
+        //on below line we are requesting the read external storage permissions.
+        ActivityCompat.requestPermissions(this, new String[]{READ_MEDIA_IMAGES}, PERMISSION_REQUEST_CODE);
+
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
+        // this method is called after permissions has been granted.
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        // we are checking the permission code.
+        if (requestCode == PERMISSION_REQUEST_CODE) {// in this case we are checking if the permissions are accepted or not.
+            if (grantResults.length > 0) {
+                boolean storageAccepted = grantResults[0] == PackageManager.PERMISSION_GRANTED;
+                if (storageAccepted) {
+                    //TODO: below may not be necessary
+                    //getImagePath();
+                } else {
+                    // if permissions are denied we are closing the app and displaying the toast message.
+                    Toast.makeText(this, "Permissions denied, Permissions are required to use the app..", Toast.LENGTH_SHORT).show();
+                }
+            }
+        }
     }
 }

@@ -1,8 +1,11 @@
 package com.example.photoalbum;
 
+import android.graphics.Bitmap;
+import android.net.Uri;
+
 public class AlbumGridRecyclerData {
     private String title;
-    private int imgID;
+    private Bitmap imgBitmap;
     private Album album;
 
     public String getTitle() {
@@ -13,21 +16,21 @@ public class AlbumGridRecyclerData {
         this.title = title;
     }
 
-    public int getImgID() {
-        return imgID;
+    public Bitmap getImgBitmap() {
+        return imgBitmap;
     }
 
-    public void setImgID(int imgID) {
-        this.imgID = imgID;
+    public void setImgBitmap(Bitmap imgBitmap) {
+        this.imgBitmap = imgBitmap;
     }
 
     public Album getAlbum(){return album;}
 
     public void setAlbum(Album al){this.album = al;}
 
-    public AlbumGridRecyclerData(String title, int imgID, Album al) {
+    public AlbumGridRecyclerData(String title, Bitmap imgBitmap, Album al) {
         setTitle(title);
-        setImgID(imgID);
+        setImgBitmap(imgBitmap);
         setAlbum(al);
     }
 }
