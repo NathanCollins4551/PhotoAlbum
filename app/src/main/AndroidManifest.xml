@@ -3,7 +3,7 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
 
     <application
         android:allowBackup="true"
@@ -16,6 +16,9 @@
         android:theme="@style/Theme.PhotoAlbum"
         tools:targetApi="31">
         <activity
+            android:name=".ViewPhoto"
+            android:exported="false" />
+        <activity
             android:name=".MainActivity"
             android:exported="true">
             <intent-filter>
@@ -27,7 +30,6 @@
         <activity
             android:name=".ViewAlbum"
             android:exported="false" />
-
     </application>
 
 </manifest>

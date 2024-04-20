@@ -8,7 +8,7 @@ import java.util.ArrayList;
 
 public class Album implements Serializable {
     String Name;
-    ArrayList<Bitmap> Pictures;
+    ArrayList<String> Pictures;
 
     Album(){
         setName(null);
@@ -21,10 +21,10 @@ public class Album implements Serializable {
     public void setName(String n){
         this.Name = n;
     }
-    public ArrayList<Bitmap> getPictures(){
+    public ArrayList<String> getPictures(){
         return Pictures;
     }
-    public void setPictures(ArrayList<Bitmap> p){
+    public void setPictures(ArrayList<String> p){
         this.Pictures = p;
     }
 }

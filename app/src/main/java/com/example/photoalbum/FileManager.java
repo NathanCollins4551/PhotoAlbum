@@ -69,6 +69,7 @@ public class FileManager {
 
         try {
             bufferedReader.close();
+            fileReader.close();
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -119,6 +120,7 @@ public class FileManager {
 
         try {
             bufferedWriter.close();
+            fileWriter.close();
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

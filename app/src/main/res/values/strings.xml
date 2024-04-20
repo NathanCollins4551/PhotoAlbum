@@ -5,4 +5,7 @@
     <string name="album_name">Album Name</string>
     <string name="delete_album">Delete Album</string>
     <string name="add_photo">Add Photo</string>
+    <string name="back">Back</string>
+    <string name="share">Share</string>
+    <string name="delete_photo">Delete Photo</string>
 </resources>

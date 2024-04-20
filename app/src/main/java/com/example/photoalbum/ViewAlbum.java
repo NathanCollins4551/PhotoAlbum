@@ -11,12 +11,14 @@ import android.provider.MediaStore;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
@@ -24,6 +26,7 @@ import androidx.core.view.WindowInsetsCompat;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Optional;
@@ -35,8 +38,9 @@ public class ViewAlbum extends AppCompatActivity implements View.OnClickListener
     TextView textView;
     Button btnAddPhoto;
     Button btnDeleteAlbum;
+    Button btnBack;
     Album album;
-    FileManager fileManager;
+    //FileManager fileManager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -51,16 +55,18 @@ public class ViewAlbum extends AppCompatActivity implements View.OnClickListener
 
         album = (Album) getIntent().getSerializableExtra("album");
 
-        fileManager = new FileManager(getApplicationContext(), "userdata.json");
+        //fileManager = new FileManager(getApplicationContext(), "userdata.json");
 
 
         recyclerView=findViewById(R.id.idCourseRVPhoto);
         textView = findViewById(R.id.photoAlbumName);
         btnAddPhoto = findViewById(R.id.buttonAddPhoto);
         btnDeleteAlbum = findViewById(R.id.buttonDeleteAlbum);
+        btnBack = findViewById(R.id.buttonBack);
 
         btnAddPhoto.setOnClickListener(this);
         btnDeleteAlbum.setOnClickListener(this);
+        btnBack.setOnClickListener(this);
 
 
 
@@ -69,17 +75,25 @@ public class ViewAlbum extends AppCompatActivity implements View.OnClickListener
         updatePhotos();
 
     }
+    @Override
+    public void onResume(){
+        super.onResume();
+
+        updatePhotos();
+    }
 
     @Override
     public void onClick(View view)
     {
         if(view.equals(btnDeleteAlbum)){
-            if(verifyDelete()){
-                deleteAlbum();
-            }
+            updatePhotos();
+            verifyDeleteAlertDialog();
         }
         else if(view.equals(btnAddPhoto)){
             addPhoto();
+        }
+        else if(view.equals(btnBack)){
+            finish();
         }
 
     }
@@ -104,71 +118,94 @@ public class ViewAlbum extends AppCompatActivity implements View.OnClickListener
                     // do your operation from here....
                     if (data != null && data.getData() != null) {
                         Uri selectedImageUri = data.getData();
-                        Bitmap selectedImageBitmap = null;
-                        try {
-                            selectedImageBitmap
-                                    = MediaStore.Images.Media.getBitmap(
-                                    this.getContentResolver(),
-                                    selectedImageUri);
+                        if (selectedImageUri != null) {
+                            int takeFlags = data.getFlags() & (Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+                            getContentResolver().takePersistableUriPermission(selectedImageUri, takeFlags);
                         }
-                        catch (IOException e) {
-                            e.printStackTrace();
-                        }
-                        newPhotoBitmap(selectedImageBitmap);
+                        newPhotoUri(selectedImageUri);
                     }
                 }
             });
 
-    private void newPhotoBitmap(Bitmap selectedImageBitmap) {
-        ArrayList<Bitmap> photosBitmap = new ArrayList<>();
+    private void newPhotoUri(Uri selectedImageUri) {
+        ArrayList<String> photosUri;
+        FileManager fileManager = new FileManager(getApplicationContext(), "userdata.json");
 
         UserData userData = fileManager.readData();
 
         for(Album al : userData.getAlbums()){
-            if(al.getName().equals(album.getName())){
+            if(al.getName().equalsIgnoreCase(album.getName())){
                 if(al.getPictures() != null){
-                    photosBitmap = al.getPictures();
+                    photosUri = al.getPictures();
                 }
                 else{
-                    photosBitmap = new ArrayList<>();
+                    photosUri = new ArrayList<>();
                 }
 
-                photosBitmap.add(selectedImageBitmap);
+                photosUri.add(selectedImageUri.toString());
 
-                al.setPictures(photosBitmap);
-
+                al.setPictures(photosUri);
                 fileManager.writeData(userData);
-
                 break;
             }
         }
-
         updatePhotos();
     }
 
 
     private void deleteAlbum() {
+        FileManager fileManager = new FileManager(getApplicationContext(), "userdata.json");
+
+        UserData userData = fileManager.readData();
+
+        for(int i = 0; i < userData.getAlbums().size();i++){
+            if(userData.getAlbums().get(i).getName().equalsIgnoreCase(album.getName())){
+                userData.getAlbums().remove(i);
+                fileManager.writeData(userData);
+                break;
+            }
+        }
+
+        finish();
     }
 
-    private boolean verifyDelete() {
+    public void verifyDeleteAlertDialog() {
+        // Create an alert builder
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Alert!");
+        builder.setMessage("Do you want to delete this album?");
+        builder.setCancelable(false);
 
-        return false;
+        // add a button
+        builder.setPositiveButton("Yes", (dialog, which) -> {
+            // send data from the AlertDialog to the Activity
+           deleteAlbum();
+        });
+
+        builder.setNegativeButton("No",(dialog, which) -> {
+            dialog.cancel();
+        });
+        // create and show the alert dialog
+        AlertDialog dialog = builder.create();
+        dialog.show();
     }
 
 
     public void updatePhotos(){
         // created new array list..
         recyclerDataArrayList=new ArrayList<>();
+        FileManager fileManager = new FileManager(getApplicationContext(), "userdata.json");
+
 
         // added data to array list
 
         UserData userData;
         userData = fileManager.readData();
 
-        ArrayList<Bitmap> photos = new ArrayList<>();
+        ArrayList<String> photos = new ArrayList<>();
         Optional<Album> al = userData.getAlbums()
                          .stream()
-                         .filter(a -> a.getName().equals(album.getName()))
+                         .filter(a -> a.getName().equalsIgnoreCase(album.getName()))
                          .findFirst();
         if(al.isPresent()){
             photos = al.get().getPictures();
@@ -176,7 +213,7 @@ public class ViewAlbum extends AppCompatActivity implements View.OnClickListener
 
         if(photos != null){
             for(int i = 0; i < photos.size(); i++){
-                recyclerDataArrayList.add(new PhotoGridRecyclerData(photos.get(i)));
+                recyclerDataArrayList.add(new PhotoGridRecyclerData(Uri.parse(photos.get(i))));
             }
         }
 
@@ -191,56 +228,20 @@ public class ViewAlbum extends AppCompatActivity implements View.OnClickListener
         recyclerView.setLayoutManager(layoutManager);
         recyclerView.setAdapter(adapter);
 
-        adapter.setOnClickListener((PhotoGridRecycleViewAdapter.OnClickListener) (position) -> {
-            Toast.makeText(this,"clicked", Toast.LENGTH_LONG).show();
+        adapter.setOnClickListener((PhotoGridRecycleViewAdapter.OnClickListener) (position, uri) -> {
+            loadPhoto(uri);
         });
 
     }
 
-    /*
-    private void getImagePath() {
-        // in this method we are adding all our image paths
-        // in our arraylist which we have created.
-        // on below line we are checking if the device is having an sd card or not.
-        boolean isSDPresent = android.os.Environment.getExternalStorageState().equals(android.os.Environment.MEDIA_MOUNTED);
+    private void loadPhoto(Uri uri) {
+        Intent intent = new Intent(this, ViewPhoto.class);
 
-        if (isSDPresent) {
+        String uriString = uri.toString();
+        intent.putExtra("photo",uriString);
+        intent.putExtra("album",album);
 
-            // if the sd card is present we are creating a new list in
-            // which we are getting our images data with their ids.
-            final String[] columns = {MediaStore.Images.Media.DATA, MediaStore.Images.Media._ID};
-
-            // on below line we are creating a new
-            // string to order our images by string.
-            final String orderBy = MediaStore.Images.Media._ID;
-
-            // this method will stores all the images
-            // from the gallery in Cursor
-            Cursor cursor = getContentResolver().query(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, columns, null, null, orderBy);
-
-            // below line is to get total number of images
-            int count = cursor.getCount();
-
-            // on below line we are running a loop to add
-            // the image file path in our array list.
-            for (int i = 0; i < count; i++) {
-
-                // on below line we are moving our cursor position
-                cursor.moveToPosition(i);
-
-                // on below line we are getting image file path
-                int dataColumnIndex = cursor.getColumnIndex(MediaStore.Images.Media.DATA);
-
-                // after that we are getting the image file path
-                // and adding that path in our array list.
-                imagePaths.add(cursor.getString(dataColumnIndex));
-            }
-            //imageRVAdapter.notifyDataSetChanged();
-            // after adding the data to our
-            // array list we are closing our cursor.
-            cursor.close();
-        }
+        startActivity(intent);
     }
 
-     */
 }

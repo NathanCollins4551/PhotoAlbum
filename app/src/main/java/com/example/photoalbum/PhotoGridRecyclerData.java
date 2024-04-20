@@ -6,14 +6,14 @@ import android.net.Uri;
 
 public class PhotoGridRecyclerData {
 
-    private Bitmap imgBitmap;
-    public Bitmap getImgBitmap(){
-        return imgBitmap;
+    private Uri imgUri;
+    public Uri getImgUri(){
+        return imgUri;
     }
-    public void setImgBitmap(Bitmap bitmap){
-        this.imgBitmap = bitmap;
+    public void setImgUri(Uri uri){
+        this.imgUri = uri;
     }
-    public PhotoGridRecyclerData(Bitmap bitmap) {
-        setImgBitmap(bitmap);
+    public PhotoGridRecyclerData(Uri uri) {
+        setImgUri(uri);
     }
 }

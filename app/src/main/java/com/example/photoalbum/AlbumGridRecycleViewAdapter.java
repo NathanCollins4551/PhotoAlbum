@@ -37,7 +37,7 @@ public class AlbumGridRecycleViewAdapter extends RecyclerView.Adapter<AlbumGridR
         // Set the data to textview and imageview.
         AlbumGridRecyclerData recyclerData = items.get(holder.getAdapterPosition());
         holder.courseTV.setText(recyclerData.getTitle());
-        holder.courseIV.setImageBitmap(recyclerData.getImgBitmap());
+        holder.courseIV.setImageURI(recyclerData.getImgUri());
 
         holder.itemView.setOnClickListener(new View.OnClickListener() {
             @Override

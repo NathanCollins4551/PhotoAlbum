@@ -5,65 +5,56 @@
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".ViewAlbum">
+    tools:context=".ViewPhoto">
 
-    <TextView
-        android:id="@+id/photoAlbumName"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/album_name"
-        android:textSize="30sp"
+    <ImageView
+        android:id="@+id/ivPhoto"
+        android:layout_width="422dp"
+        android:layout_height="567dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.497"
+        app:layout_constraintHorizontal_bias="0.545"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.091" />
-
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/idCourseRVPhoto"
-        android:layout_width="200dp"
-        android:layout_height="400dp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintVertical_bias="0.097" />
 
     <Button
-        android:id="@+id/buttonAddPhoto"
+        android:id="@+id/buttonSharePhoto"
         android:layout_width="135dp"
         android:layout_height="wrap_content"
         android:layout_marginTop="40dp"
-        android:text="@string/add_photo"
+        android:text="@string/share"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.15"
+        app:layout_constraintHorizontal_bias="0.217"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/idCourseRVPhoto"
-        app:layout_constraintVertical_bias="0.0" />
+        app:layout_constraintTop_toBottomOf="@+id/ivPhoto"
+        app:layout_constraintVertical_bias="0.185" />
 
     <Button
-        android:id="@+id/buttonDeleteAlbum"
+        android:id="@+id/buttonBack2"
         android:layout_width="135dp"
         android:layout_height="wrap_content"
         android:layout_marginTop="40dp"
-        android:text="@string/delete_album"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.787"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/idCourseRVPhoto"
-        app:layout_constraintVertical_bias="0.0" />
-
-    <Button
-        android:id="@+id/buttonBack"
-        android:layout_width="135dp"
-        android:layout_height="wrap_content"
         android:text="@string/back"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.963" />
+        app:layout_constraintTop_toBottomOf="@+id/ivPhoto"
+        app:layout_constraintVertical_bias="0.725" />
+
+    <Button
+        android:id="@+id/buttonDeletePhoto"
+        android:layout_width="135dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="40dp"
+        android:text="@string/delete_photo"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.811"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/ivPhoto"
+        app:layout_constraintVertical_bias="0.185" />
+
 
 </androidx.constraintlayout.widget.ConstraintLayout>

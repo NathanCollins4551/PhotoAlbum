@@ -2,6 +2,8 @@ package com.example.photoalbum;
 
 import static android.Manifest.permission.READ_MEDIA_IMAGES;
 
+import androidx.annotation.AnyRes;
+import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
@@ -10,6 +12,7 @@ import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -25,6 +28,8 @@ import android.view.View;
 import android.widget.EditText;
 import android.widget.Toast;
 
+import java.io.FileNotFoundException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Objects;
 
@@ -36,7 +41,6 @@ public class MainActivity extends AppCompatActivity {
     final String CREATE_NEW = "Create New";
     private static final int PERMISSION_REQUEST_CODE = 200;
     private ArrayList<String> imagePaths;
-    FileManager fileManager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -46,7 +50,7 @@ public class MainActivity extends AppCompatActivity {
 
         recyclerView=findViewById(R.id.idCourseRV);
 
-        fileManager = new FileManager(getApplicationContext(), "userdata.json");
+        FileManager fileManager = new FileManager(getApplicationContext(), "userdata.json");
 
         if(!checkPermission()){
             requestPermission();
@@ -55,30 +59,61 @@ public class MainActivity extends AppCompatActivity {
         UserData userData = fileManager.readData();
 
 
-        updateAlbums(userData);
-
-
+        try {
+            updateAlbums(userData);
+        } catch (FileNotFoundException e) {
+            throw new RuntimeException(e);
+        }
 
 
     }
 
-    public void updateAlbums(UserData userData){
+    @Override
+    public void onResume(){
+        super.onResume();
+
+        FileManager fileManager = new FileManager(getApplicationContext(), "userdata.json");
+        UserData userData = fileManager.readData();
+        try {
+            updateAlbums(userData);
+        } catch (FileNotFoundException e) {
+            throw new RuntimeException(e);
+        }
+
+    }
+
+    public static final Uri getUriToDrawable(@NonNull Context context,
+                                             @AnyRes int drawableId) {
+        Uri imageUri = Uri.parse(ContentResolver.SCHEME_ANDROID_RESOURCE
+                + "://" + context.getResources().getResourcePackageName(drawableId)
+                + '/' + context.getResources().getResourceTypeName(drawableId)
+                + '/' + context.getResources().getResourceEntryName(drawableId) );
+        return imageUri;
+    }
+
+    public void updateAlbums(UserData userData) throws FileNotFoundException {
         // created new array list..
         recyclerDataArrayList=new ArrayList<>();
 
-        Bitmap parrot = BitmapFactory.decodeResource(getApplicationContext().getResources(),
-                R.drawable.parrot);
+
+        Uri defaultAlbumUri = getUriToDrawable(getApplicationContext(),android.R.drawable.ic_menu_gallery);
 
         // added data to array list
         for(int i = 0; i < userData.getAlbums().size(); i++){
-            recyclerDataArrayList.add(new AlbumGridRecyclerData(userData.getAlbums().get(i).getName(),parrot, userData.getAlbums().get(i)));
+            if(userData.getAlbums().get(i).getPictures() != null && !userData.getAlbums().get(i).getPictures().isEmpty()){
+                Uri uri = Uri.parse(userData.getAlbums().get(i).getPictures().get(0));
+                recyclerDataArrayList.add(new AlbumGridRecyclerData(userData.getAlbums().get(i).getName(),uri, userData.getAlbums().get(i)));
+            }
+            else{
+                recyclerDataArrayList.add(new AlbumGridRecyclerData(userData.getAlbums().get(i).getName(),defaultAlbumUri, userData.getAlbums().get(i)));
+            }
         }
 
         //add new album option
 
         Album tmp = new Album();
         tmp.setName(CREATE_NEW);
-        recyclerDataArrayList.add(new AlbumGridRecyclerData(tmp.getName(), parrot, tmp));
+        recyclerDataArrayList.add(new AlbumGridRecyclerData(tmp.getName(), defaultAlbumUri, tmp));
 
         // added data from arraylist to adapter class.
         AlbumGridRecycleViewAdapter adapter = new AlbumGridRecycleViewAdapter(recyclerDataArrayList,this);
@@ -110,13 +145,13 @@ public class MainActivity extends AppCompatActivity {
         startActivity(intent);
     }
     void createAlbum(String name){
+        FileManager fileManager = new FileManager(getApplicationContext(), "userdata.json");
         Album newAlbum = new Album();
         newAlbum.setName(name);
 
         UserData userData = fileManager.readData();
         userData.getAlbums().add(newAlbum);
-        //below should not be needed
-        //userData.setAlbums(userData.getAlbums());
+
         fileManager.writeData(userData);
 
         loadAlbum(newAlbum);
@@ -168,11 +203,7 @@ public class MainActivity extends AppCompatActivity {
         if (requestCode == PERMISSION_REQUEST_CODE) {// in this case we are checking if the permissions are accepted or not.
             if (grantResults.length > 0) {
                 boolean storageAccepted = grantResults[0] == PackageManager.PERMISSION_GRANTED;
-                if (storageAccepted) {
-                    //TODO: below may not be necessary
-                    //getImagePath();
-                } else {
-                    // if permissions are denied we are closing the app and displaying the toast message.
+                if (!storageAccepted) {
                     Toast.makeText(this, "Permissions denied, Permissions are required to use the app..", Toast.LENGTH_SHORT).show();
                 }
             }

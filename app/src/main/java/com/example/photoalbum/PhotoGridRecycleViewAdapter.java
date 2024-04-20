@@ -1,6 +1,7 @@
 package com.example.photoalbum;
 
 import android.content.Context;
+import android.net.Uri;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -36,14 +37,14 @@ public class PhotoGridRecycleViewAdapter extends RecyclerView.Adapter<PhotoGridR
     public void onBindViewHolder(@NonNull RecyclerViewHolder holder, int pos) {
         // Set the data to textview and imageview.
         PhotoGridRecyclerData recyclerData = items.get(holder.getAdapterPosition());
-        holder.courseIV.setImageBitmap(recyclerData.getImgBitmap());
+        holder.courseIV.setImageURI(recyclerData.getImgUri());
         //holder.courseIV.setImageResource(recyclerData.getImgID());
 
         holder.itemView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 if (onClickListener != null) {
-                    onClickListener.onClick(holder.getAdapterPosition());
+                    onClickListener.onClick(holder.getAdapterPosition(), recyclerData.getImgUri());
                 }
             }
         });
@@ -58,7 +59,7 @@ public class PhotoGridRecycleViewAdapter extends RecyclerView.Adapter<PhotoGridR
     }
 
     public interface OnClickListener {
-        void onClick(int position);
+        void onClick(int position, Uri uri);
     }
 
     // View Holder Class to handle Recycler View.

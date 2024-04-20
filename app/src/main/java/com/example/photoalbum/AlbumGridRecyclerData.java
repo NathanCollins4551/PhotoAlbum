@@ -5,7 +5,7 @@ import android.net.Uri;
 
 public class AlbumGridRecyclerData {
     private String title;
-    private Bitmap imgBitmap;
+    private Uri imgUri;
     private Album album;
 
     public String getTitle() {
@@ -16,21 +16,21 @@ public class AlbumGridRecyclerData {
         this.title = title;
     }
 
-    public Bitmap getImgBitmap() {
-        return imgBitmap;
+    public Uri getImgUri() {
+        return imgUri;
     }
 
-    public void setImgBitmap(Bitmap imgBitmap) {
-        this.imgBitmap = imgBitmap;
+    public void setImgUri(Uri imgUri) {
+        this.imgUri = imgUri;
     }
 
     public Album getAlbum(){return album;}
 
     public void setAlbum(Album al){this.album = al;}
 
-    public AlbumGridRecyclerData(String title, Bitmap imgBitmap, Album al) {
+    public AlbumGridRecyclerData(String title, Uri imgUri, Album al) {
         setTitle(title);
-        setImgBitmap(imgBitmap);
+        setImgUri(imgUri);
         setAlbum(al);
     }
 }
