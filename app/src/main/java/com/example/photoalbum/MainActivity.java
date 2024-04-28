@@ -7,6 +7,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.content.res.AppCompatResources;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.GridLayoutManager;
@@ -19,12 +20,14 @@ import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.util.Log;
 import android.view.View;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
@@ -37,10 +40,14 @@ import java.util.Objects;
 public class MainActivity extends AppCompatActivity {
 
     private RecyclerView recyclerView;
+    Button selectButton;
+    Button deleteButton;
     private ArrayList<AlbumGridRecyclerData> recyclerDataArrayList;
     final String CREATE_NEW = "Create New";
+    final String CANCEL = "Cancel";
+    final String SELECT = "Select";
     private static final int PERMISSION_REQUEST_CODE = 200;
-    private ArrayList<String> imagePaths;
+    private ArrayList<Album> selectAlbums;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -49,6 +56,8 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         recyclerView=findViewById(R.id.idCourseRV);
+        selectButton=findViewById(R.id.buttonSelect);
+        deleteButton=findViewById(R.id.buttonDeleteSelected);
 
         FileManager fileManager = new FileManager(getApplicationContext(), "userdata.json");
 
@@ -56,32 +65,102 @@ public class MainActivity extends AppCompatActivity {
             requestPermission();
         }
 
-        UserData userData = fileManager.readData();
-
-
         try {
-            updateAlbums(userData);
+            updateAlbums(false);
         } catch (FileNotFoundException e) {
             throw new RuntimeException(e);
         }
 
+        selectButton.setOnClickListener(l -> {
+            if(!selectButton.getText().equals(CANCEL)){
+                selectButton.setText(CANCEL);
+                try {
+                    updateAlbums(true);
+                } catch (FileNotFoundException e) {
+                    throw new RuntimeException(e);
+                }
+                deleteButton.setVisibility(View.VISIBLE);
+            }
+            else{
+                selectButton.setText(SELECT);
+                try {
+                    updateAlbums(false);
+                } catch (FileNotFoundException e) {
+                    throw new RuntimeException(e);
+                }
+                deleteButton.setVisibility(View.INVISIBLE);
+            }
+
+        });
+
+        deleteButton.setOnClickListener(l -> {
+            verifyDeleteAlertDialog();
+        });
 
     }
+
+
 
     @Override
     public void onResume(){
         super.onResume();
 
-        FileManager fileManager = new FileManager(getApplicationContext(), "userdata.json");
-        UserData userData = fileManager.readData();
         try {
-            updateAlbums(userData);
+            updateAlbums(false);
         } catch (FileNotFoundException e) {
             throw new RuntimeException(e);
         }
 
     }
+    private void deleteAlbums() throws FileNotFoundException {
 
+        FileManager fileManager = new FileManager(getApplicationContext(), "userdata.json");
+
+        UserData userData = fileManager.readData();
+
+        while(!selectAlbums.isEmpty()){
+            for(int i = 0; i < userData.getAlbums().size();i++){
+                if(userData.getAlbums().get(i).getName().equalsIgnoreCase(selectAlbums.get(0).getName())){
+                    userData.getAlbums().remove(i);
+                    break;
+                }
+            }
+            selectAlbums.remove(0);
+
+        }
+
+        fileManager.writeData(userData);
+
+        updateAlbums(false);
+
+        selectButton.setText(SELECT);
+        deleteButton.setVisibility(View.INVISIBLE);
+    }
+
+    public void verifyDeleteAlertDialog() {
+        // Create an alert builder
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Alert!");
+        builder.setMessage("Do you want to permanently delete the selected albums?");
+        builder.setCancelable(false);
+
+        // add a button
+        builder.setPositiveButton("Yes", (dialog, which) -> {
+            // send data from the AlertDialog to the Activity
+            try {
+                deleteAlbums();
+            } catch (FileNotFoundException e) {
+                throw new RuntimeException(e);
+            }
+        });
+
+        builder.setNegativeButton("No",(dialog, which) -> {
+            dialog.cancel();
+        });
+        // create and show the alert dialog
+        AlertDialog dialog = builder.create();
+        dialog.show();
+    }
     public static final Uri getUriToDrawable(@NonNull Context context,
                                              @AnyRes int drawableId) {
         Uri imageUri = Uri.parse(ContentResolver.SCHEME_ANDROID_RESOURCE
@@ -91,10 +170,13 @@ public class MainActivity extends AppCompatActivity {
         return imageUri;
     }
 
-    public void updateAlbums(UserData userData) throws FileNotFoundException {
+    public void updateAlbums(boolean selected) throws FileNotFoundException {
         // created new array list..
         recyclerDataArrayList=new ArrayList<>();
 
+        FileManager fileManager = new FileManager(getApplicationContext(), "userdata.json");
+
+        UserData userData = fileManager.readData();
 
         Uri defaultAlbumUri = getUriToDrawable(getApplicationContext(),android.R.drawable.ic_menu_gallery);
 
@@ -111,9 +193,11 @@ public class MainActivity extends AppCompatActivity {
 
         //add new album option
 
-        Album tmp = new Album();
-        tmp.setName(CREATE_NEW);
-        recyclerDataArrayList.add(new AlbumGridRecyclerData(tmp.getName(), defaultAlbumUri, tmp));
+        if(!selected){
+            Album tmp = new Album();
+            tmp.setName(CREATE_NEW);
+            recyclerDataArrayList.add(new AlbumGridRecyclerData(tmp.getName(), defaultAlbumUri, tmp));
+        }
 
         // added data from arraylist to adapter class.
         AlbumGridRecycleViewAdapter adapter = new AlbumGridRecycleViewAdapter(recyclerDataArrayList,this);
@@ -126,13 +210,29 @@ public class MainActivity extends AppCompatActivity {
         recyclerView.setLayoutManager(layoutManager);
         recyclerView.setAdapter(adapter);
 
-        adapter.setOnClickListener((AlbumGridRecycleViewAdapter.OnClickListener) (position, al) -> {
-            if(Objects.equals(al.getName(), CREATE_NEW)){
+        adapter.setOnClickListener((AlbumGridRecycleViewAdapter.OnClickListener) (view, position, al) -> {
+            if(selected){
+                if(selectAlbums == null){
+                    selectAlbums = new ArrayList<>();
+                }
+                if(!selectAlbums.contains(al)){
+                    selectAlbums.add(al);
+                    Drawable foreground = AppCompatResources.getDrawable(getApplicationContext(),R.drawable.border_red);
+                    view.setForeground(foreground);
+                }
+                else{
+                    selectAlbums.remove(al);
+                    Drawable foreground = AppCompatResources.getDrawable(getApplicationContext(),R.drawable.background_border);
+                    view.setForeground(foreground);
+                }
+            }
+            else if(Objects.equals(al.getName(), CREATE_NEW)){
                 getAlbumNameAlertDialog();
             }
             else{
                 loadAlbum(al);
             }
+
         });
 
     }
@@ -150,6 +250,14 @@ public class MainActivity extends AppCompatActivity {
         newAlbum.setName(name);
 
         UserData userData = fileManager.readData();
+
+        for(Album x : userData.getAlbums()){
+            if(x.getName().equalsIgnoreCase(name)){
+                Toast.makeText(this,"This album already exists, choose a different name!",Toast.LENGTH_LONG).show();
+                return;
+            }
+        }
+
         userData.getAlbums().add(newAlbum);
 
         fileManager.writeData(userData);

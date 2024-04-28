@@ -44,7 +44,7 @@ public class PhotoGridRecycleViewAdapter extends RecyclerView.Adapter<PhotoGridR
             @Override
             public void onClick(View view) {
                 if (onClickListener != null) {
-                    onClickListener.onClick(holder.getAdapterPosition(), recyclerData.getImgUri());
+                    onClickListener.onClick(holder.itemView, holder.getAdapterPosition(), recyclerData.getImgUri());
                 }
             }
         });
@@ -59,7 +59,7 @@ public class PhotoGridRecycleViewAdapter extends RecyclerView.Adapter<PhotoGridR
     }
 
     public interface OnClickListener {
-        void onClick(int position, Uri uri);
+        void onClick(View view, int position, Uri uri);
     }
 
     // View Holder Class to handle Recycler View.

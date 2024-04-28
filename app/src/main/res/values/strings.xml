@@ -8,4 +8,9 @@
     <string name="back">Back</string>
     <string name="share">Share</string>
     <string name="delete_photo">Delete Photo</string>
+    <string name="facebook_app_id">1314663283059991</string>
+    <string name="fb_login_protocol_scheme">fb1314663283059991</string>
+    <string name="facebook_client_token">5819775a1e2aeadaf715da8985f3e0f0</string>
+    <string name="select">Select</string>
+    <string name="delete">Delete</string>
 </resources>

@@ -1,13 +1,22 @@
 package com.example.photoalbum;
 
 import android.content.Context;
+import android.content.res.Resources;
+import android.graphics.drawable.Drawable;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 import androidx.annotation.NonNull;
+import androidx.appcompat.content.res.AppCompatResources;
+import androidx.core.content.res.ResourcesCompat;
 import androidx.recyclerview.widget.RecyclerView;
+
+import com.xw.repo.VectorCompatTextView;
+
+import java.io.FileNotFoundException;
+import java.io.InputStream;
 import java.util.ArrayList;
 
 
@@ -36,14 +45,28 @@ public class AlbumGridRecycleViewAdapter extends RecyclerView.Adapter<AlbumGridR
     public void onBindViewHolder(@NonNull RecyclerViewHolder holder, int pos) {
         // Set the data to textview and imageview.
         AlbumGridRecyclerData recyclerData = items.get(holder.getAdapterPosition());
-        holder.courseTV.setText(recyclerData.getTitle());
-        holder.courseIV.setImageURI(recyclerData.getImgUri());
+
+        holder.vectorCompatTextView.setText(recyclerData.getTitle());
+        //holder.vectorCompatTextView.setDrawable
+
+        Drawable newDrawable;
+
+        try {
+            InputStream inputStream = mcontext.getContentResolver().openInputStream(recyclerData.getImgUri());
+            newDrawable = Drawable.createFromStream(inputStream, recyclerData.getImgUri().toString() );
+        } catch (FileNotFoundException e) {
+            newDrawable = mcontext.getResources().getDrawable(R.drawable.parrot);
+        }
+
+        new VectorCompatTextView.CompoundDrawableConfigBuilder(holder.vectorCompatTextView)
+                .setDrawableTop(newDrawable)
+                .build();
 
         holder.itemView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 if (onClickListener != null) {
-                    onClickListener.onClick(holder.getAdapterPosition(), recyclerData.getAlbum());
+                    onClickListener.onClick(holder.itemView, holder.getAdapterPosition(), recyclerData.getAlbum());
                 }
             }
         });
@@ -58,19 +81,17 @@ public class AlbumGridRecycleViewAdapter extends RecyclerView.Adapter<AlbumGridR
     }
 
     public interface OnClickListener {
-        void onClick(int position, Album model);
+        void onClick(View view, int position, Album model);
     }
 
     // View Holder Class to handle Recycler View.
     static class RecyclerViewHolder extends RecyclerView.ViewHolder {
 
-        private TextView courseTV;
-        private ImageView courseIV;
+        private VectorCompatTextView vectorCompatTextView;
 
         public RecyclerViewHolder(@NonNull View itemView) {
             super(itemView);
-            courseTV = itemView.findViewById(R.id.idTVCourse);
-            courseIV = itemView.findViewById(R.id.idIVcourseIV);
+            vectorCompatTextView = itemView.findViewById(R.id.vectorCompat);
         }
     }
 }
